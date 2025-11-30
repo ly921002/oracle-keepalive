@@ -1,13 +1,14 @@
-FROM alpine:3.20
+FROM python:3.11-alpine
 
-RUN apk add --no-cache curl bash
+# 安装编译 psutil 所需依赖
+RUN apk add --no-cache gcc musl-dev python3-dev linux-headers procps
 
-WORKDIR /app
+# 安装 psutil
+RUN pip install --no-cache-dir psutil
 
-COPY keepalive.sh /app/keepalive.sh
-RUN chmod +x /app/keepalive.sh
+COPY auto_keepalive.py /auto_keepalive.py
 
-ENV TARGET_URL="https://www.google.com/generate_204"
-ENV INTERVAL=30
+ENV TARGET_CPU=20
+ENV TARGET_MEM=20
 
-CMD ["bash", "/app/keepalive.sh"]
+CMD ["python3", "/auto_keepalive.py"]
