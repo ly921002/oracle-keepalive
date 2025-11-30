@@ -3,6 +3,11 @@ name: Build and push KeepAlive image
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'Dockerfile'
+      - 'keep_active.sh'
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
