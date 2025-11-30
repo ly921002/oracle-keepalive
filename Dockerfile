@@ -2,7 +2,7 @@
 FROM alpine:latest
 
 # 安装 stress-ng (提供内存分配和更可控的 CPU 负载选项)
-RUN apk update && apk add stress-ng
+RUN apk update && apk add --no-cache stress-ng
 
 # 设置工作目录
 WORKDIR /app
