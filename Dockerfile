@@ -1,14 +1,17 @@
-FROM python:3.11-alpine
+# 使用轻量级的 Alpine Linux 作为基础镜像
+FROM alpine:latest
 
-# 安装编译 psutil 所需依赖
-RUN apk add --no-cache gcc musl-dev python3-dev linux-headers procps
+# 安装 stress-ng (提供内存分配和更可控的 CPU 负载选项)
+RUN apk update && apk add stress-ng
 
-# 安装 psutil
-RUN pip install --no-cache-dir psutil
+# 设置工作目录
+WORKDIR /app
 
-COPY auto_keepalive.py /auto_keepalive.py
+# 复制脚本到容器中
+COPY keep_active.sh .
 
-ENV TARGET_CPU=20
-ENV TARGET_MEM=20
+# 赋予脚本执行权限
+RUN chmod +x keep_active.sh
 
-CMD ["python3", "/auto_keepalive.py"]
+# 定义容器启动时执行的命令
+CMD ["/app/keep_active.sh"]
