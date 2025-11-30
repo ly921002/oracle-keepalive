@@ -5,31 +5,43 @@
 
 # 1. CPU 负载配置
 # 设置用于产生负载的 CPU 核心数
-CPU_LOAD_CORES=${CPU_LOAD_CORES:-1} 
-
-# 设置 CPU 目标总负载百分比。
-# 例如，设置为 20，表示所有核心的总负载目标为 20%。
-CPU_LOAD_PERCENT=${CPU_LOAD_PERCENT:-20} 
+CPU_LOAD_CORES=${CPU_LOAD_CORES:-1}  
 
 # 2. 内存负载配置
 # 设置要分配的内存大小 (例如: 700M, 1500M, 2G)
-MEM_ALLOC_BYTES=${MEM_ALLOC_BYTES:-512M}
+MEM_ALLOC_BYTES=${MEM_ALLOC_BYTES:-700M}
 MEM_LOAD_PROCESSES=1 # 保持为 1 个进程来分配内存
 
 # -----------------------------------
+echo "--- 节奏负载模式已启动 ---"
+echo "CPU 核心: $CPU_LOAD_CORES"
+echo "基础内存: $MEM_ALLOC_BYTES"
 
-echo "--- 启动 OCI VPS 活跃保持 Docker 容器负载 ---"
-echo "配置: CPU 核数=${CPU_LOAD_CORES}, 目标总负载=${CPU_LOAD_PERCENT}%, 内存=${MEM_ALLOC_BYTES}"
+while true; do
+    # 工作时间：120~300 秒（2~5 分钟）
+    WORK=$(( RANDOM % 180 + 120 ))
 
-# 使用 stress-ng 同时运行 CPU 和 VM (内存) 压力测试
-stress-ng \
-    --cpu $CPU_LOAD_CORES \
-    --cpu-method matrixprod \
-    --cpu-load $CPU_LOAD_PERCENT \
-    --vm $MEM_LOAD_PROCESSES \
-    --vm-bytes $MEM_ALLOC_BYTES \
-    --vm-keep \
-    --timeout 0
+    # 休息时间：15~35 秒
+    REST=$(( RANDOM % 20 + 15 ))
 
-# 保持容器持续运行
-tail -f /dev/null
+    # CPU 负载：10%~15%
+    CPU_LOAD=$(( RANDOM % 5 + 10 ))
+
+    echo "[工作] CPU=${CPU_LOAD}% 内存=${MEM_ALLOC_BYTES} 持续 ${WORK}s"
+
+    # 启动 stress-ng 负载（自动结束）
+    stress-ng \
+        --cpu "$CPU_LOAD_CORES" \
+        --cpu-load "$CPU_LOAD" \
+        --vm 1 \
+        --vm-bytes "$MEM_ALLOC_BYTES" \
+        --vm-keep \
+        --timeout "$WORK" &
+
+    # 等待当前 stress 进程结束，避免重叠
+    wait $!
+
+    echo "[休息] ${REST}s"
+    sleep $REST
+done
+
